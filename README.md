@@ -20,6 +20,36 @@ of herdr's supported agents.
 herdr plugin install RenKoya1/herdr-approve-all
 ```
 
+For a local checkout, link the checkout instead of installing from GitHub:
+
+```powershell
+herdr plugin link C:\path\to\herdr-approve-all --enabled
+```
+
+Windows uses the action IDs `approve-blocked-windows`, `auto-on-windows` and
+`auto-off-windows` (all prefixed with `renkoya1.approve-all.`). For example:
+
+```powershell
+herdr plugin action invoke renkoya1.approve-all.approve-blocked-windows
+herdr plugin action invoke renkoya1.approve-all.auto-on-windows
+herdr plugin action invoke renkoya1.approve-all.auto-off-windows
+```
+
+Use `renkoya1.approve-all.approve-blocked-windows` in the keybinding below on
+Windows. Windows sweeps process panes sequentially; repeat the action for new
+prompts. Hold-to-repeat and idle debounce described below apply to Unix only.
+Existing auto-approve configuration is retained when switching plugin sources.
+
+On Windows, enabling auto mode also starts one hidden PowerShell monitor. It
+rechecks the fleet every `APPROVE_AUTO_POLL_SEC` seconds (default `1`), so later
+prompts are handled even when Herdr does not emit another status-change event.
+The monitor also checks the visible prompt fallback, uses the same pane locks as
+manual/event actions, and exits when auto mode is turned off. A Windows startup
+hook restores it when the persisted toggle is on. Event hooks can restart it if
+it has stopped. Enabling auto mode again starts it for an already-running Herdr.
+The worker's PID and latest result/error are written to `monitor.pid` and
+`monitor.log` under `HERDR_PLUGIN_STATE_DIR` (or `state` under the config dir).
+
 ## Manual sweep
 
 Bind the sweep to a key in `~/.config/herdr/config.toml`:
@@ -133,6 +163,15 @@ Env vars, read by both the sweep and the auto handler:
 | `APPROVE_HOLD_POLL_SEC` | `0.08` | hold-detection granularity |
 | `APPROVE_HOLD_POLLS` | `3` | grace windows before a hold is considered released |
 | `APPROVE_HOLD_MAX_SEC` | `60` | backstop: longest a single hold keeps sweeping |
+| `APPROVE_AUTO_POLL_SEC` | `1` | Windows auto monitor pause between fleet checks (minimum `0.1`) |
+
+## Windows verification
+
+Run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File tests/windows-smoke.ps1`.
+The test uses a mock Herdr in a temporary directory and checks stacked prompts,
+configured keys, repeated automatic prompts without events, visible-prompt
+fallback when the reported status stays working, stopping auto mode, and
+restoring the persisted toggle at startup.
 
 ## What it does (and doesn't)
 
@@ -149,7 +188,9 @@ pressing the key — or accept the risk knowingly with auto mode.
 ## Requirements
 
 - herdr ≥ 0.7.4
-- `bash` on PATH, plus `jq` (fast path) or `python3` (fallback) — macOS / Linux
+- macOS / Linux: `bash` on PATH, plus `jq` (fast path) or `python3` (fallback)
+- Windows: Windows PowerShell (`powershell.exe`); Herdr's Windows plugin support
+  may depend on the installed Herdr release.
 
 ## License
 

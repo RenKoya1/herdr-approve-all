@@ -3,26 +3,60 @@ name = "Approve All"
 version = "0.3.0"
 min_herdr_version = "0.7.4"
 description = "Approve every blocked agent at once: sends Enter to all waiting panes, accepting the highlighted default (Yes), then verifies each pane left the blocked state and drains the prompts queued behind it."
-platforms = ["linux", "macos"]
+platforms = ["linux", "macos", "windows"]
+
+[[startup]]
+command = ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/approve-windows.ps1", "startup"]
+platforms = ["windows"]
 
 [[actions]]
 id = "approve-blocked"
 title = "Approve all blocked agents"
 contexts = ["workspace"]
 command = ["bash", "scripts/approve-blocked.sh"]
+platforms = ["linux", "macos"]
+
+[[actions]]
+id = "approve-blocked-windows"
+title = "Approve all blocked agents"
+contexts = ["workspace"]
+command = ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/approve-windows.ps1", "sweep"]
+platforms = ["windows"]
 
 [[actions]]
 id = "auto-on"
 title = "Auto-approve: turn ON"
 contexts = ["workspace"]
 command = ["bash", "scripts/auto-toggle.sh", "on"]
+platforms = ["linux", "macos"]
+
+[[actions]]
+id = "auto-on-windows"
+title = "Auto-approve: turn ON"
+contexts = ["workspace"]
+command = ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/approve-windows.ps1", "on"]
+platforms = ["windows"]
 
 [[actions]]
 id = "auto-off"
 title = "Auto-approve: turn OFF"
 contexts = ["workspace"]
 command = ["bash", "scripts/auto-toggle.sh", "off"]
+platforms = ["linux", "macos"]
+
+[[actions]]
+id = "auto-off-windows"
+title = "Auto-approve: turn OFF"
+contexts = ["workspace"]
+command = ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/approve-windows.ps1", "off"]
+platforms = ["windows"]
 
 [[events]]
 on = "pane.agent_status_changed"
 command = ["bash", "scripts/on-status-changed.sh"]
+platforms = ["linux", "macos"]
+
+[[events]]
+on = "pane.agent_status_changed"
+command = ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "scripts/approve-windows.ps1", "event"]
+platforms = ["windows"]
