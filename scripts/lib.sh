@@ -39,7 +39,22 @@ keys_for() {
 }
 
 file_mtime() {
-  stat -f %m "$1" 2>/dev/null || stat -c %Y "$1" 2>/dev/null || date +%s
+  local mt
+  # Capture each probe: GNU stat -f can print filesystem info before failing.
+  # Only emit a valid timestamp, since callers use it in shell arithmetic.
+  if mt=$(stat -c %Y "$1" 2>/dev/null); then
+    case "$mt" in
+      ''|*[!0-9]*) ;;
+      *) printf '%s\n' "$mt"; return 0 ;;
+    esac
+  fi
+  if mt=$(stat -f %m "$1" 2>/dev/null); then
+    case "$mt" in
+      ''|*[!0-9]*) ;;
+      *) printf '%s\n' "$mt"; return 0 ;;
+    esac
+  fi
+  date +%s
 }
 
 # take_lock <dir> <max_age_seconds>: mkdir-based mutex. A lock older than
